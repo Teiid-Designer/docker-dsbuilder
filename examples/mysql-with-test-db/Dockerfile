@@ -28,6 +28,16 @@ RUN ${BIN_DIR}/mysql-exec.sh && \
     rm -f *.sql
 
 #
+# Add datasource configuration files
+#
+ADD datasources/* ./
+
+#
+# Start wildfly and configure the data sources
+#
+RUN chmod +x ./configure-wildfly-datasources.sh && ./configure-wildfly-datasources.sh
+
+#
 # These folders are marked as Docker volumes. So they are mounted when docker runs the final container
 # To have the data persisted across several docker run executions, need to mount volumes.
 #

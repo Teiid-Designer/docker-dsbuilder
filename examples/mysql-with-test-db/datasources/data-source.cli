@@ -1,0 +1,9 @@
+connect 127.0.0.1
+
+batch
+
+data-source add --jndi-name=java:/jboss/MySQLUSStatesDS --name=MySQLUSStatesDS --connection-url=jdbc:mysql://localhost:3306/usstates --driver-name=mysql-connector-java-bin.jar_com.mysql.jdbc.Driver_5_1 --user-name=admin --password=admin
+
+data-source add --jndi-name=java:/jboss/MySQLPatientsDS --name=MySQLPatientsDS --connection-url=jdbc:mysql://localhost:3306/patients --driver-name=mysql-connector-java-bin.jar_com.mysql.jdbc.Driver_5_1 --user-name=admin --password=admin
+
+run-batch
