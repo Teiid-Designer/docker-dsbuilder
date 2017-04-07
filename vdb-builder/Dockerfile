@@ -11,9 +11,12 @@ ENV VDB_BUILDER_RELEASE_DIRECTORY "0.0.4-SNAPSHOT"
 ENV VDB_BUILDER_RELEASE_WAR "komodo-rest-0.0.4-20170406.085836-1.war"
 ENV VDB_BUILDER_WAR_URL "https://repository.jboss.org/nexus/service/local/repositories/snapshots/content/org/komodo/komodo-rest/$VDB_BUILDER_RELEASE_DIRECTORY/$VDB_BUILDER_RELEASE_WAR"
 ENV VDB_BUILDER_WAR_FILE "vdb-builder.war"
+ENV BIN_DIR "/usr/local/bin"
 
 ENV JBOSS_HOME /opt/jboss/wildfly
 ENV TEIID_VERSION 9.1.0.Final
+
+user root
 
 # Download and unzip wildfly-teiid distribution
 RUN cd $JBOSS_HOME \
@@ -24,6 +27,9 @@ RUN cd $JBOSS_HOME \
 
 # Add ssl store for https
 ADD ssl $JBOSS_HOME/standalone/configuration/ssl
+
+# Add binary running configuration
+COPY bin/* $JBOSS_HOME/bin/
 
 # Add in the teiid configuration, which includes the ssl parameters
 COPY standalone.xml $JBOSS_HOME/standalone/configuration/standalone-teiid.xml
@@ -40,8 +46,17 @@ ADD $VDB_BUILDER_WAR_URL $JBOSS_HOME/standalone/deployments/$VDB_BUILDER_WAR_FIL
 # ADD and COPY always create files as root. Need to call
 # chown to have them owned by the jboss user
 #
+
+#
+# Copy wildfly exec script and set permissions
+#
+COPY wildfly-exec.sh ${BIN_DIR}/
+
 USER root
-RUN chown -R jboss:jboss ${JBOSS_HOME}/standalone
+RUN chown -R jboss:0 ${JBOSS_HOME} \
+    && chmod -R g+rw ${JBOSS_HOME} \
+    && chmod +x ${BIN_DIR}/wildfly-exec.sh \
+    && yum -y install --setopt=tsflags=nodocs bc
 
 # Change to jboss user for running the server
 USER jboss
@@ -49,4 +64,11 @@ USER jboss
 # Expose the wildfly and teiid ports
 EXPOSE 8080 8443 9990 31000 35432
 
-CMD ["/bin/sh", "-c", "$JBOSS_HOME/bin/standalone.sh -c standalone-teiid.xml -b 0.0.0.0 -bmanagement 0.0.0.0"]
+#
+# The default cmd for this container
+#
+CMD ["/bin/sh", "-c", "${BIN_DIR}/wildfly-exec.sh"]
+
+
+
+
